@@ -1,114 +1,82 @@
-# Reflection Publisher-3
+# BambangShop Publisher App
+Tutorial and Example for Advanced Programming 2024 - Faculty of Computer Science, Universitas Indonesia
 
-## Variasi Pola Observer yang Digunakan
+---
 
-Dalam implementasi tutorial ini, kita menggunakan **Push Model** dari Pola Observer. Karakteristik utama dari Push Model terlihat dalam metode `notify()` di `NotificationService`, di mana:
-- Publisher (dalam hal ini ProductService) secara aktif mengirimkan data notifikasi ke semua subscriber
-- Data notifikasi didorong langsung ke subscriber tanpa subscriber perlu meminta ulang informasi
+## About this Project
+In this repository, we have provided you a REST (REpresentational State Transfer) API project using Rocket web framework.
 
-## Kelebihan dan Kekurangan Pull Model
+This project consists of four modules:
+1.  `controller`: this module contains handler functions used to receive request and send responses.
+    In Model-View-Controller (MVC) pattern, this is the Controller part.
+2.  `model`: this module contains structs that serve as data containers.
+    In MVC pattern, this is the Model part.
+3.  `service`: this module contains structs with business logic methods.
+    In MVC pattern, this is also the Model part.
+4.  `repository`: this module contains structs that serve as databases and methods to access the databases.
+    You can use methods of the struct to get list of objects, or operating an object (create, read, update, delete).
 
-Jika kita menerapkan Pull Model sebagai alternatif:
+This repository provides a basic functionality that makes BambangShop work: ability to create, read, and delete `Product`s.
+This repository already contains a functioning `Product` model, repository, service, and controllers that you can try right away.
 
-### Kelebihan Pull Model:
-1. Mengurangi beban server karena subscriber mengambil data saat diperlukan
-2. Mengurangi risiko kegagalan pengiriman notifikasi
-3. Subscriber memiliki kontrol lebih besar terhadap kapan dan bagaimana mengambil data
+As this is an Observer Design Pattern tutorial repository, you need to implement another feature: `Notification`.
+This feature will notify creation, promotion, and deletion of a product, to external subscribers that are interested of a certain product type.
+The subscribers are another Rocket instances, so the notification will be sent using HTTP POST request to each subscriber's `receive notification` address.
 
-### Kekurangan Pull Model:
-1. Meningkatkan kompleksitas pada sisi subscriber
-2. Potensi keterlambatan dalam mendapatkan informasi terbaru
-3. Overhead tambahan karena subscriber harus secara berkala melakukan polling
-4. Lebih banyak permintaan jaringan yang tidak perlu
+## API Documentations
 
-## Konsekuensi Tanpa Multi-threading
+You can download the Postman Collection JSON here: https://ristek.link/AdvProgWeek7Postman
 
-Jika kita memutuskan untuk tidak menggunakan multi-threading dalam proses notifikasi:
+After you download the Postman Collection, you can try the endpoints inside "BambangShop Publisher" folder.
+This Postman collection also contains endpoints that you need to implement later on (the `Notification` feature).
 
-1. **Proses Blocking**
-   - Setiap notifikasi akan diproses secara sekuensial
-   - Pengiriman notifikasi akan menghambat proses utama aplikasi
-   - Waktu respons akan menjadi lebih lambat
+Postman is an installable client that you can use to test web endpoints using HTTP request.
+You can also make automated functional testing scripts for REST API projects using this client.
+You can install Postman via this website: https://www.postman.com/downloads/
 
-2. **Keterbatasan Skalabilitas**
-   - Tidak dapat menangani banyak subscriber secara paralel
-   - Jika salah satu notifikasi gagal atau lambat, akan mempengaruhi keseluruhan sistem
+## How to Run in Development Environment
+1.  Set up environment variables first by creating `.env` file.
+    Here is the example of `.env` file:
+    ```bash
+    APP_INSTANCE_ROOT_URL="http://localhost:8000"
+    ```
+    Here are the details of each environment variable:
+    | variable              | type   | description                                                |
+    |-----------------------|--------|------------------------------------------------------------|
+    | APP_INSTANCE_ROOT_URL | string | URL address where this publisher instance can be accessed. |
+2.  Use `cargo run` to run this app.
+    (You might want to use `cargo check` if you only need to verify your work without running the app.)
 
-3. **Risiko Timeout**
-   - Kemungkinan besar akan mengalami timeout pada proses dengan banyak subscriber
-   - Subscriber mungkin tidak menerima notifikasi tepat waktu
+## Mandatory Checklists (Publisher)
+-   [ ] Clone https://gitlab.com/ichlaffterlalu/bambangshop to a new repository.
+-   **STAGE 1: Implement models and repositories**
+    -   [ ] Commit: `Create Subscriber model struct.`
+    -   [ ] Commit: `Create Notification model struct.`
+    -   [ ] Commit: `Create Subscriber database and Subscriber repository struct skeleton.`
+    -   [ ] Commit: `Implement add function in Subscriber repository.`
+    -   [ ] Commit: `Implement list_all function in Subscriber repository.`
+    -   [ ] Commit: `Implement delete function in Subscriber repository.`
+    -   [ ] Write answers of your learning module's "Reflection Publisher-1" questions in this README.
+-   **STAGE 2: Implement services and controllers**
+    -   [ ] Commit: `Create Notification service struct skeleton.`
+    -   [ ] Commit: `Implement subscribe function in Notification service.`
+    -   [ ] Commit: `Implement subscribe function in Notification controller.`
+    -   [ ] Commit: `Implement unsubscribe function in Notification service.`
+    -   [ ] Commit: `Implement unsubscribe function in Notification controller.`
+    -   [ ] Write answers of your learning module's "Reflection Publisher-2" questions in this README.
+-   **STAGE 3: Implement notification mechanism**
+    -   [ ] Commit: `Implement update method in Subscriber model to send notification HTTP requests.`
+    -   [ ] Commit: `Implement notify function in Notification service to notify each Subscriber.`
+    -   [ ] Commit: `Implement publish function in Program service and Program controller.`
+    -   [ ] Commit: `Edit Product service methods to call notify after create/delete.`
+    -   [ ] Write answers of your learning module's "Reflection Publisher-3" questions in this README.
 
-4. **Performa Menurun**
-   - Sistem akan terasa tidak responsif
-   - Operasi publikasi produk akan menjadi lambat
+## Your Reflections
+This is the place for you to write reflections:
 
-Multi-threading memungkinkan kita mengirim notifikasi secara independen dan paralel, yang sangat penting untuk menjaga performa dan responsivitas sistem.
+### Mandatory (Publisher) Reflections
 
-# Reflection Publisher-2
-
-## Pemisahan Service dan Repository dari Model dalam MVC
-
-Dalam pola Model-View-Controller (MVC), Model awalnya mencakup penyimpanan data dan logika bisnis. Namun, ada beberapa alasan penting mengapa kita perlu memisahkan "Service" dan "Repository" dari Model:
-
-1. **Separation of Concerns (Pemisahan Kepentingan)**
-   - Repository bertanggung jawab untuk operasi data mentah (CRUD)
-   - Service berisi logika bisnis dan transformasi data
-   - Model hanya menyimpan struktur data dan representasi objek
-
-2. **Fleksibilitas dan Maintainability**
-   - Pemisahan memudahkan pengujian (unit testing) setiap komponen
-   - Memungkinkan pergantian implementasi database atau penyimpanan data tanpa mengubah logika bisnis
-
-3. **Abstraksi dan Decoupling**
-   - Repository menyembunyikan detail implementasi penyimpanan data
-   - Service dapat bekerja dengan berbagai sumber data tanpa perubahan signifikan
-
-## Konsekuensi Penggunaan Hanya Model
-
-Jika hanya menggunakan Model untuk semua interaksi, beberapa masalah kompleksitas dapat terjadi:
-
-1. **Model **Program**:
-   - Akan berisi logika bisnis, operasi data, dan aturan validasi
-   - Menjadi "God Object" yang memiliki terlalu banyak tanggung jawab
-   - Sulit untuk dipelihara dan diuji
-
-2. **Model **Subscriber**:
-   - Logika pendaftaran dan pembatalan langganan akan tercampur dengan definisi struktur data
-   - Manajemen status dan validasi URL menjadi rumit dalam satu kelas
-
-3. **Model **Notification**:
-   - Proses pengiriman notifikasi akan kompleks
-   - Sulit memisahkan antara struktur data notifikasi dan mekanisme pengiriman
-
-## Pengalaman dengan Postman
-
-Postman adalah alat yang sangat berguna dalam pengembangan dan pengujian API. Beberapa fitur Postman yang menarik untuk proyek proyek saya kedepannya:
-
-1. **Manajemen Permintaan HTTP**
-   - Menguji endpoint POST, GET, DELETE dengan mudah
-   - Menyimpan dan mengorganisir berbagai jenis permintaan API
-
-2. **Lingkungan (Environment) dan Variabel**
-   - Dapat mengonfigurasi variabel untuk berbagai tahap (development, staging, production)
-   - Memudahkan pengujian dengan berbagai konfigurasi
-
-3. **Dokumentasi Otomatis**
-   - Membuat dokumentasi API dengan cepat
-   - Berbagi koleksi permintaan dengan anggota tim
-
-4. **Otomatisasi Pengujian**
-   - Menulis skrip pengujian untuk memvalidasi respons API
-   - Membuat rangkaian pengujian terintegrasi
-
-5. **Fitur Kolaborasi**
-   - Berbagi koleksi permintaan dengan anggota tim
-   - Sinkronisasi konfigurasi API
-
-Postman juga dapat sangat membantu dalam pengembangan proyek ini, terutama untuk:
-- Menguji endpoint produk
-- Memverifikasi proses langganan dan pembatalan langganan
-- Memvalidasi struktur respons JSON
-- Mengembangkan dokumentasi API
+#### Reflection Publisher-1
 
 # Reflection Publisher-1
 
@@ -280,86 +248,119 @@ Dalam skenario 100 concurrent requests:
 ### Kesimpulan
 Penggunaan DashMap adalah pilihan optimal yang menyeimbangkan safety, performa, dan kemudahan implementasi. Singleton pattern dengan RwLock akan menambah kompleksitas tanpa keuntungan yang signifikan.
 
-# BambangShop Publisher App
-Tutorial and Example for Advanced Programming 2024 - Faculty of Computer Science, Universitas Indonesia
-
----
-
-## About this Project
-In this repository, we have provided you a REST (REpresentational State Transfer) API project using Rocket web framework.
-
-This project consists of four modules:
-1.  `controller`: this module contains handler functions used to receive request and send responses.
-    In Model-View-Controller (MVC) pattern, this is the Controller part.
-2.  `model`: this module contains structs that serve as data containers.
-    In MVC pattern, this is the Model part.
-3.  `service`: this module contains structs with business logic methods.
-    In MVC pattern, this is also the Model part.
-4.  `repository`: this module contains structs that serve as databases and methods to access the databases.
-    You can use methods of the struct to get list of objects, or operating an object (create, read, update, delete).
-
-This repository provides a basic functionality that makes BambangShop work: ability to create, read, and delete `Product`s.
-This repository already contains a functioning `Product` model, repository, service, and controllers that you can try right away.
-
-As this is an Observer Design Pattern tutorial repository, you need to implement another feature: `Notification`.
-This feature will notify creation, promotion, and deletion of a product, to external subscribers that are interested of a certain product type.
-The subscribers are another Rocket instances, so the notification will be sent using HTTP POST request to each subscriber's `receive notification` address.
-
-## API Documentations
-
-You can download the Postman Collection JSON here: https://ristek.link/AdvProgWeek7Postman
-
-After you download the Postman Collection, you can try the endpoints inside "BambangShop Publisher" folder.
-This Postman collection also contains endpoints that you need to implement later on (the `Notification` feature).
-
-Postman is an installable client that you can use to test web endpoints using HTTP request.
-You can also make automated functional testing scripts for REST API projects using this client.
-You can install Postman via this website: https://www.postman.com/downloads/
-
-## How to Run in Development Environment
-1.  Set up environment variables first by creating `.env` file.
-    Here is the example of `.env` file:
-    ```bash
-    APP_INSTANCE_ROOT_URL="http://localhost:8000"
-    ```
-    Here are the details of each environment variable:
-    | variable              | type   | description                                                |
-    |-----------------------|--------|------------------------------------------------------------|
-    | APP_INSTANCE_ROOT_URL | string | URL address where this publisher instance can be accessed. |
-2.  Use `cargo run` to run this app.
-    (You might want to use `cargo check` if you only need to verify your work without running the app.)
-
-## Mandatory Checklists (Publisher)
--   [ ] Clone https://gitlab.com/ichlaffterlalu/bambangshop to a new repository.
--   **STAGE 1: Implement models and repositories**
-    -   [ ] Commit: `Create Subscriber model struct.`
-    -   [ ] Commit: `Create Notification model struct.`
-    -   [ ] Commit: `Create Subscriber database and Subscriber repository struct skeleton.`
-    -   [ ] Commit: `Implement add function in Subscriber repository.`
-    -   [ ] Commit: `Implement list_all function in Subscriber repository.`
-    -   [ ] Commit: `Implement delete function in Subscriber repository.`
-    -   [ ] Write answers of your learning module's "Reflection Publisher-1" questions in this README.
--   **STAGE 2: Implement services and controllers**
-    -   [ ] Commit: `Create Notification service struct skeleton.`
-    -   [ ] Commit: `Implement subscribe function in Notification service.`
-    -   [ ] Commit: `Implement subscribe function in Notification controller.`
-    -   [ ] Commit: `Implement unsubscribe function in Notification service.`
-    -   [ ] Commit: `Implement unsubscribe function in Notification controller.`
-    -   [ ] Write answers of your learning module's "Reflection Publisher-2" questions in this README.
--   **STAGE 3: Implement notification mechanism**
-    -   [ ] Commit: `Implement update method in Subscriber model to send notification HTTP requests.`
-    -   [ ] Commit: `Implement notify function in Notification service to notify each Subscriber.`
-    -   [ ] Commit: `Implement publish function in Program service and Program controller.`
-    -   [ ] Commit: `Edit Product service methods to call notify after create/delete.`
-    -   [ ] Write answers of your learning module's "Reflection Publisher-3" questions in this README.
-
-## Your Reflections
-This is the place for you to write reflections:
-
-### Mandatory (Publisher) Reflections
-
-#### Reflection Publisher-1
 
 #### Reflection Publisher-2
 
+# Reflection Publisher-2
+
+## Pemisahan Service dan Repository dari Model dalam MVC
+
+Dalam pola Model-View-Controller (MVC), Model awalnya mencakup penyimpanan data dan logika bisnis. Namun, ada beberapa alasan penting mengapa kita perlu memisahkan "Service" dan "Repository" dari Model:
+
+1. **Separation of Concerns (Pemisahan Kepentingan)**
+   - Repository bertanggung jawab untuk operasi data mentah (CRUD)
+   - Service berisi logika bisnis dan transformasi data
+   - Model hanya menyimpan struktur data dan representasi objek
+
+2. **Fleksibilitas dan Maintainability**
+   - Pemisahan memudahkan pengujian (unit testing) setiap komponen
+   - Memungkinkan pergantian implementasi database atau penyimpanan data tanpa mengubah logika bisnis
+
+3. **Abstraksi dan Decoupling**
+   - Repository menyembunyikan detail implementasi penyimpanan data
+   - Service dapat bekerja dengan berbagai sumber data tanpa perubahan signifikan
+
+## Konsekuensi Penggunaan Hanya Model
+
+Jika hanya menggunakan Model untuk semua interaksi, beberapa masalah kompleksitas dapat terjadi:
+
+1. **Model **Program**:
+   - Akan berisi logika bisnis, operasi data, dan aturan validasi
+   - Menjadi "God Object" yang memiliki terlalu banyak tanggung jawab
+   - Sulit untuk dipelihara dan diuji
+
+2. **Model **Subscriber**:
+   - Logika pendaftaran dan pembatalan langganan akan tercampur dengan definisi struktur data
+   - Manajemen status dan validasi URL menjadi rumit dalam satu kelas
+
+3. **Model **Notification**:
+   - Proses pengiriman notifikasi akan kompleks
+   - Sulit memisahkan antara struktur data notifikasi dan mekanisme pengiriman
+
+## Pengalaman dengan Postman
+
+Postman adalah alat yang sangat berguna dalam pengembangan dan pengujian API. Beberapa fitur Postman yang menarik untuk proyek proyek saya kedepannya:
+
+1. **Manajemen Permintaan HTTP**
+   - Menguji endpoint POST, GET, DELETE dengan mudah
+   - Menyimpan dan mengorganisir berbagai jenis permintaan API
+
+2. **Lingkungan (Environment) dan Variabel**
+   - Dapat mengonfigurasi variabel untuk berbagai tahap (development, staging, production)
+   - Memudahkan pengujian dengan berbagai konfigurasi
+
+3. **Dokumentasi Otomatis**
+   - Membuat dokumentasi API dengan cepat
+   - Berbagi koleksi permintaan dengan anggota tim
+
+4. **Otomatisasi Pengujian**
+   - Menulis skrip pengujian untuk memvalidasi respons API
+   - Membuat rangkaian pengujian terintegrasi
+
+5. **Fitur Kolaborasi**
+   - Berbagi koleksi permintaan dengan anggota tim
+   - Sinkronisasi konfigurasi API
+
+Postman juga dapat sangat membantu dalam pengembangan proyek ini, terutama untuk:
+- Menguji endpoint produk
+- Memverifikasi proses langganan dan pembatalan langganan
+- Memvalidasi struktur respons JSON
+- Mengembangkan dokumentasi API
+
+
 #### Reflection Publisher-3
+# Reflection Publisher-3
+
+## Variasi Pola Observer yang Digunakan
+
+Dalam implementasi tutorial ini, kita menggunakan **Push Model** dari Pola Observer. Karakteristik utama dari Push Model terlihat dalam metode `notify()` di `NotificationService`, di mana:
+- Publisher (dalam hal ini ProductService) secara aktif mengirimkan data notifikasi ke semua subscriber
+- Data notifikasi didorong langsung ke subscriber tanpa subscriber perlu meminta ulang informasi
+
+## Kelebihan dan Kekurangan Pull Model
+
+Jika kita menerapkan Pull Model sebagai alternatif:
+
+### Kelebihan Pull Model:
+1. Mengurangi beban server karena subscriber mengambil data saat diperlukan
+2. Mengurangi risiko kegagalan pengiriman notifikasi
+3. Subscriber memiliki kontrol lebih besar terhadap kapan dan bagaimana mengambil data
+
+### Kekurangan Pull Model:
+1. Meningkatkan kompleksitas pada sisi subscriber
+2. Potensi keterlambatan dalam mendapatkan informasi terbaru
+3. Overhead tambahan karena subscriber harus secara berkala melakukan polling
+4. Lebih banyak permintaan jaringan yang tidak perlu
+
+## Konsekuensi Tanpa Multi-threading
+
+Jika kita memutuskan untuk tidak menggunakan multi-threading dalam proses notifikasi:
+
+1. **Proses Blocking**
+   - Setiap notifikasi akan diproses secara sekuensial
+   - Pengiriman notifikasi akan menghambat proses utama aplikasi
+   - Waktu respons akan menjadi lebih lambat
+
+2. **Keterbatasan Skalabilitas**
+   - Tidak dapat menangani banyak subscriber secara paralel
+   - Jika salah satu notifikasi gagal atau lambat, akan mempengaruhi keseluruhan sistem
+
+3. **Risiko Timeout**
+   - Kemungkinan besar akan mengalami timeout pada proses dengan banyak subscriber
+   - Subscriber mungkin tidak menerima notifikasi tepat waktu
+
+4. **Performa Menurun**
+   - Sistem akan terasa tidak responsif
+   - Operasi publikasi produk akan menjadi lambat
+
+Multi-threading memungkinkan kita mengirim notifikasi secara independen dan paralel, yang sangat penting untuk menjaga performa dan responsivitas sistem.
