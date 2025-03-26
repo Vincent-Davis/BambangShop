@@ -1,3 +1,49 @@
+# Reflection Publisher-3
+
+## Variasi Pola Observer yang Digunakan
+
+Dalam implementasi tutorial ini, kita menggunakan **Push Model** dari Pola Observer. Karakteristik utama dari Push Model terlihat dalam metode `notify()` di `NotificationService`, di mana:
+- Publisher (dalam hal ini ProductService) secara aktif mengirimkan data notifikasi ke semua subscriber
+- Data notifikasi didorong langsung ke subscriber tanpa subscriber perlu meminta ulang informasi
+
+## Kelebihan dan Kekurangan Pull Model
+
+Jika kita menerapkan Pull Model sebagai alternatif:
+
+### Kelebihan Pull Model:
+1. Mengurangi beban server karena subscriber mengambil data saat diperlukan
+2. Mengurangi risiko kegagalan pengiriman notifikasi
+3. Subscriber memiliki kontrol lebih besar terhadap kapan dan bagaimana mengambil data
+
+### Kekurangan Pull Model:
+1. Meningkatkan kompleksitas pada sisi subscriber
+2. Potensi keterlambatan dalam mendapatkan informasi terbaru
+3. Overhead tambahan karena subscriber harus secara berkala melakukan polling
+4. Lebih banyak permintaan jaringan yang tidak perlu
+
+## Konsekuensi Tanpa Multi-threading
+
+Jika kita memutuskan untuk tidak menggunakan multi-threading dalam proses notifikasi:
+
+1. **Proses Blocking**
+   - Setiap notifikasi akan diproses secara sekuensial
+   - Pengiriman notifikasi akan menghambat proses utama aplikasi
+   - Waktu respons akan menjadi lebih lambat
+
+2. **Keterbatasan Skalabilitas**
+   - Tidak dapat menangani banyak subscriber secara paralel
+   - Jika salah satu notifikasi gagal atau lambat, akan mempengaruhi keseluruhan sistem
+
+3. **Risiko Timeout**
+   - Kemungkinan besar akan mengalami timeout pada proses dengan banyak subscriber
+   - Subscriber mungkin tidak menerima notifikasi tepat waktu
+
+4. **Performa Menurun**
+   - Sistem akan terasa tidak responsif
+   - Operasi publikasi produk akan menjadi lambat
+
+Multi-threading memungkinkan kita mengirim notifikasi secara independen dan paralel, yang sangat penting untuk menjaga performa dan responsivitas sistem.
+
 # Reflection Publisher-2
 
 ## Pemisahan Service dan Repository dari Model dalam MVC
