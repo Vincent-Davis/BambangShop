@@ -1,3 +1,173 @@
+# Reflection Publisher-1
+
+## 1. Kebutuhan Interface/Trait untuk Subscriber
+
+### Analisis Kode Saat Ini
+
+```rust
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Subscriber {
+    pub url: String,
+    pub name: String,
+}
+```
+
+### Observasi Pola Observer Klasik
+
+Pada implementasi Observer pattern umumnya:
+- Publisher mengelola daftar Observer yang mengimplementasikan interface tertentu
+- Interface biasanya memiliki method seperti `update()` untuk notifikasi
+
+### Kenapa Struct Cukup di Kasus Ini?
+1. **Uniform Behavior**  
+   Semua subscriber hanya membutuhkan penyimpanan data (URL dan nama) tanpa perlu implementasi logika khusus. Tidak ada kebutuhan untuk polymorphism.
+   
+2. **Simplifikasi Desain**  
+   Tidak ada method yang perlu di-enforce melalui trait (e.g., tidak ada `send_notification()` yang harus diimplementasikan berbeda tiap subscriber).
+   
+3. **Kebutuhan Spesifik BambangShop**  
+   Subscriber bertindak sebagai passive receiver dimana notifikasi dikirim melalui HTTP request eksternal. Mekanisme pengiriman sudah dihandle oleh sistem secara terpusat.
+   
+4. **Perbandingan dengan OOP**  
+   Dalam konteks Rust yang lebih functional, trait akan diperlukan jika kita perlu:
+   ```rust
+   trait Subscriber {
+       fn notify(&self, notification: Notification);
+   }
+   ```
+   Tapi pattern ini tidak terlihat di implementasi saat ini.
+
+### Kesimpulan
+Penggunaan struct cukup memadai untuk kasus BambangShop karena tidak ada variasi perilaku antar subscriber. Interface/trait akan menjadi over-engineering.
+
+---
+
+## 2. Vec vs DashMap untuk Uniqueness Constraints
+
+### Struktur Data Saat Ini
+
+```rust
+static ref SUBSCRIBERS: DashMap<String, DashMap<String, Subscriber>>;
+```
+
+### Analisis Persyaratan
+- `id` di Program dan `url` di Subscriber harus unique
+- Operasi yang sering dilakukan: add, delete, lookup by URL
+
+### Perbandingan Performa
+
+| Operasi          | Vec   | DashMap |
+|------------------|-------|---------|
+| Insert           | O(1)* | O(1)    |
+| Delete by URL    | O(n)  | O(1)    |
+| Lookup           | O(n)  | O(1)    |
+| Concurrency      | Not thread-safe | Thread-safe |
+
+*Asumsi push ke akhir list, tapi tidak menjamin uniqueness
+
+### Contoh Kasus Nyata
+Untuk 1000 subscriber:
+- Delete dengan Vec: Perlu iterasi 1000 elemen untuk cari URL
+- Delete dengan DashMap: Langsung access bucket hash
+
+### Keuntungan DashMap
+1. **Enforcement of Uniqueness**  
+   Mekanisme hash key mencegah duplikasi URL secara native.
+   
+2. **Concurrent Access**  
+   Bisa handle multiple requests secara paralel tanpa race condition.
+   
+3. **Efisiensi Spasial**  
+   Tidak perlu menyimpan data duplikat untuk validasi.
+
+### Risiko Jika Pakai Vec
+
+```rust
+// Contoh implementasi tidak efisien
+fn add_subscriber(subscribers: &mut Vec<Subscriber>, new: Subscriber) {
+    if !subscribers.iter().any(|s| s.url == new.url) {
+        subscribers.push(new);
+    }
+}
+```
+
+Kode ini akan memiliki kompleksitas O(n) untuk setiap operasi insert.
+
+### Kesimpulan
+DashMap adalah pilihan tepat untuk menjamin uniqueness dan efisiensi operasi CRUD dalam lingkungan konkuren.
+
+---
+
+## 3. DashMap vs Singleton Pattern
+
+### Implementasi Saat Ini
+
+```rust
+lazy_static! {
+    static ref SUBSCRIBERS: DashMap<...> = DashMap::new();
+}
+```
+
+### Karakteristik DashMap
+1. **Thread-Safe by Design**  
+   Menggunakan Shard Locking (banyak Mutex) untuk konkurensi tinggi.
+   
+2. **API Atomic**  
+   Operasi seperti insert, remove, dan get sudah atomic.
+
+### Jika Pakai Singleton Manual
+
+Contoh implementasi alternatif:
+
+```rust
+struct SubscriberRepo {
+    inner: RwLock<HashMap<String, HashMap<String, Subscriber>>>,
+}
+
+impl SubscriberRepo {
+    fn add(&self, product_type: &str, subscriber: Subscriber) {
+        let mut map = self.inner.write().unwrap(); // Blocking write
+        // ... logic
+    }
+}
+```
+
+### Masalah yang Muncul
+1. **Lock Contention**  
+   RwLock akan menjadi bottleneck saat high traffic.
+   
+2. **Manual Sync Complexity**  
+   Harus manage lock lifetime secara manual.
+   
+3. **Error Prone**  
+   Risiko deadlock jika lupa melepas lock.
+   
+4. **Granularity**  
+   Lock seluruh map vs DashMap yang lock per shard.
+
+### Benchmark Performa
+Dalam skenario 100 concurrent requests:
+- **DashMap**: Lock hanya pada shard yang relevan.
+- **Singleton RwLock**: Lock global seluruh map.
+
+### Kenapa DashMap Lebih Unggul
+1. **Zero-Cost Abstraction**  
+   Tidak perlu implementasi thread safety manual.
+   
+2. **Scalability**  
+   Performa tetap stabil saat data bertambah.
+   
+3. **Kompatibilitas dengan Ekosistem Rust**  
+   DashMap adalah solusi standar untuk concurrent HashMap.
+
+### Alternatif Lain
+- **Mutex<HashMap>**: Lebih buruk dari DashMap.
+- **AHashMap**: Tidak thread-safe.
+- **Redis**: Overkill untuk in-memory storage.
+
+### Kesimpulan
+Penggunaan DashMap adalah pilihan optimal yang menyeimbangkan safety, performa, dan kemudahan implementasi. Singleton pattern dengan RwLock akan menambah kompleksitas tanpa keuntungan yang signifikan.
+
 # BambangShop Publisher App
 Tutorial and Example for Advanced Programming 2024 - Faculty of Computer Science, Universitas Indonesia
 
