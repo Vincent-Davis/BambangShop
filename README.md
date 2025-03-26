@@ -1,3 +1,69 @@
+# Reflection Publisher-2
+
+## Pemisahan Service dan Repository dari Model dalam MVC
+
+Dalam pola Model-View-Controller (MVC), Model awalnya mencakup penyimpanan data dan logika bisnis. Namun, ada beberapa alasan penting mengapa kita perlu memisahkan "Service" dan "Repository" dari Model:
+
+1. **Separation of Concerns (Pemisahan Kepentingan)**
+   - Repository bertanggung jawab untuk operasi data mentah (CRUD)
+   - Service berisi logika bisnis dan transformasi data
+   - Model hanya menyimpan struktur data dan representasi objek
+
+2. **Fleksibilitas dan Maintainability**
+   - Pemisahan memudahkan pengujian (unit testing) setiap komponen
+   - Memungkinkan pergantian implementasi database atau penyimpanan data tanpa mengubah logika bisnis
+
+3. **Abstraksi dan Decoupling**
+   - Repository menyembunyikan detail implementasi penyimpanan data
+   - Service dapat bekerja dengan berbagai sumber data tanpa perubahan signifikan
+
+## Konsekuensi Penggunaan Hanya Model
+
+Jika hanya menggunakan Model untuk semua interaksi, beberapa masalah kompleksitas dapat terjadi:
+
+1. **Model **Program**:
+   - Akan berisi logika bisnis, operasi data, dan aturan validasi
+   - Menjadi "God Object" yang memiliki terlalu banyak tanggung jawab
+   - Sulit untuk dipelihara dan diuji
+
+2. **Model **Subscriber**:
+   - Logika pendaftaran dan pembatalan langganan akan tercampur dengan definisi struktur data
+   - Manajemen status dan validasi URL menjadi rumit dalam satu kelas
+
+3. **Model **Notification**:
+   - Proses pengiriman notifikasi akan kompleks
+   - Sulit memisahkan antara struktur data notifikasi dan mekanisme pengiriman
+
+## Pengalaman dengan Postman
+
+Postman adalah alat yang sangat berguna dalam pengembangan dan pengujian API. Beberapa fitur Postman yang menarik untuk proyek proyek saya kedepannya:
+
+1. **Manajemen Permintaan HTTP**
+   - Menguji endpoint POST, GET, DELETE dengan mudah
+   - Menyimpan dan mengorganisir berbagai jenis permintaan API
+
+2. **Lingkungan (Environment) dan Variabel**
+   - Dapat mengonfigurasi variabel untuk berbagai tahap (development, staging, production)
+   - Memudahkan pengujian dengan berbagai konfigurasi
+
+3. **Dokumentasi Otomatis**
+   - Membuat dokumentasi API dengan cepat
+   - Berbagi koleksi permintaan dengan anggota tim
+
+4. **Otomatisasi Pengujian**
+   - Menulis skrip pengujian untuk memvalidasi respons API
+   - Membuat rangkaian pengujian terintegrasi
+
+5. **Fitur Kolaborasi**
+   - Berbagi koleksi permintaan dengan anggota tim
+   - Sinkronisasi konfigurasi API
+
+Postman juga dapat sangat membantu dalam pengembangan proyek ini, terutama untuk:
+- Menguji endpoint produk
+- Memverifikasi proses langganan dan pembatalan langganan
+- Memvalidasi struktur respons JSON
+- Mengembangkan dokumentasi API
+
 # Reflection Publisher-1
 
 ## 1. Kebutuhan Interface/Trait untuk Subscriber
