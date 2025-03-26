@@ -16,6 +16,7 @@ impl NotificationService {
         let subscriber_result: Subscriber = SubscriberRepository::add(product_type_str, subscriber);
         return Ok(subscriber_result);
     }
+
     pub fn unsubscribe(product_type: &str, url: &str) -> Result<Subscriber> {
         let product_type_upper: String = product_type.to_uppercase();
         let product_type_str: &str = product_type_upper.as_str();
@@ -30,6 +31,7 @@ impl NotificationService {
         
         return Ok(result.unwrap());
     }
+    
     pub fn notify(&self, product_type: &str, status: &str, product: Product) {
         let mut payload: Notification = Notification {
             product_title: product.clone().title,
